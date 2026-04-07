@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TrackCommentRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: TrackCommentRepository::class)]
 #[ORM\Table(name: 'track_comments', schema: 'audiolink')]
@@ -13,6 +14,7 @@ class TrackComment
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['comment:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Track::class)]
@@ -21,18 +23,23 @@ class TrackComment
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(name: "user_id", referencedColumnName: "id")]
+    #[Groups(['comment:read'])]
     private ?User $user = null;
 
     #[ORM\Column(type: Types::TEXT)]
+    #[Groups(['comment:read', 'comment:write'])]
     private ?string $content = null;
 
     #[ORM\Column(name: "timestamp_seconds", type: Types::FLOAT)]
+    #[Groups(['comment:read', 'comment:write'])]
     private ?float $timestampSeconds = null;
 
     #[ORM\Column(name: "is_resolved", options: ["default" => false])]
+    #[Groups(['comment:read', 'comment:write'])]
     private ?bool $isResolved = false;
 
     #[ORM\Column(name: "created_at", type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[Groups(['comment:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
     public function __construct()
