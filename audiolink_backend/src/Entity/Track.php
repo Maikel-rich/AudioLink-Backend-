@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\TrackRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 #[ORM\Entity(repositoryClass: TrackRepository::class)]
 #[ORM\Table(name: 'tracks', schema: 'audiolink')]
@@ -13,6 +14,7 @@ class Track
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['track:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Project::class)]
@@ -20,21 +22,27 @@ class Track
     private ?Project $project = null;
 
     #[ORM\Column(name: "cloudinary_url", type: Types::TEXT)]
+    #[Groups(['track:read', 'track:write'])]
     private ?string $cloudinaryUrl = null;
 
     #[ORM\Column(name: "version_name", length: 100, nullable: true)]
+    #[Groups(['track:read', 'track:write'])]
     private ?string $versionName = null;
 
     #[ORM\Column(name: "is_final", options: ["default" => false])]
+    #[Groups(['track:read'])]
     private ?bool $isFinal = false;
 
     #[ORM\Column(length: 20, options: ["default" => "pendiente"])]
+    #[Groups(['track:read'])]
     private ?string $status = 'pendiente';
 
     #[ORM\Column(name: "file_size_mb", type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Groups(['track:read'])]
     private ?string $fileSizeMb = null;
 
     #[ORM\Column(name: "created_at", type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[Groups(['track:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
     public function __construct()
