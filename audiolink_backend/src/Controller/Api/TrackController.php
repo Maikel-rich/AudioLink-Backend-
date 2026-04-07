@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Controller;
+namespace App\Controller\Api;
 
+use App\Repository\TrackRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-final class TrackController extends AbstractController
+#[Route('/api/tracks')]
+class TrackController extends AbstractController
 {
-    #[Route('/api/track', name: 'app_api_track')]
-    public function index(): JsonResponse
+    #[Route('', name: 'api_tracks_list', methods: ['GET'])]
+    public function list(TrackRepository $trackRepository): JsonResponse
     {
-        return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/Api/TrackController.php',
-        ]);
+        $tracks = $trackRepository->findAll();
+        return $this->json($tracks, 200, [], ['groups' => 'track:read']);
     }
 }
