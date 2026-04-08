@@ -63,6 +63,14 @@ class AuthController extends AbstractController
     #[Route('/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(): JsonResponse
     {
-        return new JsonResponse(['message' => 'Endpoint de login listo para implementar seguridad']);
+        return new JsonResponse([
+            'error' => 'Error en el firewall.'
+        ], 500);
+    }
+
+    #[Route('/me', name: 'api_auth_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        return $this->json($this->getUser(), 200, [], ['groups' => 'user:read']);
     }
 }
