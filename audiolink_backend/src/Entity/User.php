@@ -7,51 +7,64 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'users', schema: 'audiolink')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
+    public const ROLE_PRODUCER = 0;
+    public const ROLE_ARTIST = 1;
+    public const ROLE_ADMIN = 2;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['comment:read', 'message:read', 'project:read', 'user:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['comment:read', 'message:read', 'user:read'])]
     private ?string $email = null;
 
     #[ORM\Column(name: "password_hash", type: Types::TEXT)]
     private ?string $password = null;
 
     #[ORM\Column(name: "full_name", length: 100, nullable: true)]
+    #[Groups(['comment:read', 'message:read', 'project:read', 'user:read'])]
     private ?string $fullName = null;
 
-    /**
-     * @var list<string> The user roles
-     */
-    #[ORM\Column(name: "role", type: "json")]
-    private array $roles = [];
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['comment:read', 'user:read'])]
+    private int $role = self::ROLE_ARTIST;
 
     #[ORM\Column(name: "avatar_url", type: Types::TEXT, nullable: true)]
+    #[Groups(['comment:read', 'message:read', 'user:read'])]
     private ?string $avatarUrl = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $bio = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['user:read'])]
     private ?array $genres = null;
 
     #[ORM\Column(type: Types::JSON, nullable: true)]
+    #[Groups(['user:read'])]
     private ?array $languages = null;
 
     #[ORM\Column(name: "is_verified", options: ["default" => false], nullable: true)]
+    #[Groups(['user:read'])]
     private ?bool $isVerified = false;
 
     #[ORM\Column(name: "total_streams", length: 20, nullable: true)]
+    #[Groups(['user:read'])]
     private ?string $totalStreams = null;
 
     #[ORM\Column(name: "years_experience", nullable: true)]
+    #[Groups(['user:read'])]
     private ?int $yearsExperience = null;
 
     #[ORM\Column(name: "created_at", type: Types::DATETIME_MUTABLE, nullable: true, options: ["default" => "CURRENT_TIMESTAMP"])]
@@ -85,14 +98,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        $roles[] = 'ROLE_USER';
+        $roles = ['ROLE_USER'];
+        if ($this->role === self::ROLE_ADMIN) {
+            $roles[] = 'ROLE_ADMIN';
+        } elseif ($this->role === self::ROLE_PRODUCER) {
+            $roles[] = 'ROLE_PRODUCER';
+        } elseif ($this->role === self::ROLE_ARTIST) {
+            $roles[] = 'ROLE_ARTIST';
+        }
         return array_unique($roles);
     }
 
-    public function setRoles(array $roles): static
+    public function getRole(): int
     {
-        $this->roles = $roles;
+        return $this->role;
+    }
+
+    public function setRole(int $role): static
+    {
+        $this->role = $role;
         return $this;
     }
 
@@ -106,6 +130,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->password = $password;
         return $this;
     }
+
+    public function eraseCredentials(): void {}
 
     public function getFullName(): ?string
     {
@@ -208,8 +234,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function __serialize(): array
     {
-        $data = (array) $this;
-        $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
-        return $data;
+        $vars = get_object_vars($this);
+        unset($vars['password']);
+        return $vars;
+    }
+
+    public function __unserialize(array $data): void
+    {
+        foreach ($data as $property => $value) {
+            $this->$property = $value;
+        }
     }
 }
