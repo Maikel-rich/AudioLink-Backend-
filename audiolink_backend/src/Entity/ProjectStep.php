@@ -24,6 +24,9 @@ class ProjectStep
     #[Groups(['step:read', 'project:read'])]
     private ?string $name = null;
 
+    /**
+     * Valores permitidos: 'todo', 'doing', 'done'
+     */
     #[ORM\Column(length: 20, options: ['default' => 'todo'])]
     #[Groups(['step:read', 'project:read'])]
     private ?string $status = 'todo';
