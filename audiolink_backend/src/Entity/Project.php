@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\ProjectRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: ProjectRepository::class)]
 #[ORM\Table(name: 'projects', schema: 'audiolink')]
@@ -13,38 +14,46 @@ class Project
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['project:read'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['project:read'])]
     private ?string $title = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: "artist_id", referencedColumnName: "id")]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'artist_id', referencedColumnName: 'id')]
+    #[Groups(['project:read'])]
     private ?User $artist = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: "producer_id", referencedColumnName: "id")]
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(name: 'producer_id', referencedColumnName: 'id')]
+    #[Groups(['project:read'])]
     private ?User $producer = null;
 
-    #[ORM\Column(length: 50, options: ["default" => "active"])]
+    #[ORM\Column(length: 50, nullable: true, options: ['default' => 'active'])]
+    #[Groups(['project:read'])]
     private ?string $status = 'active';
 
-    #[ORM\Column(name: "is_paid", options: ["default" => false])]
+    #[ORM\Column(name: 'is_paid', nullable: true, options: ['default' => false])]
+    #[Groups(['project:read'])]
     private ?bool $isPaid = false;
 
-    #[ORM\Column(name: "progress_percentage", options: ["default" => 0])]
-    private ?int $progressPercentage = 0;
-
-    #[ORM\Column(name: "current_stage_name", length: 50, nullable: true)]
-    private ?string $currentStageName = null;
-
-    #[ORM\Column(name: "created_at", type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, options: ['default' => 'CURRENT_TIMESTAMP'])]
+    #[Groups(['project:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
-    public function __construct()
-    {
-        $this->createdAt = new \DateTime();
-    }
+    #[ORM\Column(name: 'progress_percentage', nullable: true, options: ['default' => 0])]
+    #[Groups(['project:read'])]
+    private ?int $progressPercentage = 0;
+
+    #[ORM\Column(name: 'current_stage_name', length: 50, nullable: true)]
+    #[Groups(['project:read'])]
+    private ?string $currentStageName = null;
+
+    #[ORM\Column(name: 'final_audio_url', type: Types::TEXT, nullable: true)]
+    #[Groups(['project:read'])]
+    private ?string $finalAudioUrl = null;
 
     public function getId(): ?int
     {
@@ -106,6 +115,17 @@ class Project
         return $this;
     }
 
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+        return $this;
+    }
+
     public function getProgressPercentage(): ?int
     {
         return $this->progressPercentage;
@@ -128,14 +148,14 @@ class Project
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getFinalAudioUrl(): ?string
     {
-        return $this->createdAt;
+        return $this->finalAudioUrl;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    public function setFinalAudioUrl(?string $finalAudioUrl): static
     {
-        $this->createdAt = $createdAt;
+        $this->finalAudioUrl = $finalAudioUrl;
         return $this;
     }
 }

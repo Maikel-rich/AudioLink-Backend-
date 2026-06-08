@@ -14,40 +14,43 @@ class Track
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['track:read'])]
+    #[Groups(['track:read', 'comment:read'])]
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: Project::class)]
-    #[ORM\JoinColumn(name: "project_id", referencedColumnName: "id", onDelete: "CASCADE")]
+    #[ORM\JoinColumn(name: 'project_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
+    #[Groups(['track:read'])]
     private ?Project $project = null;
 
-    #[ORM\Column(name: "cloudinary_url", type: Types::TEXT)]
-    #[Groups(['track:read', 'track:write'])]
+    #[ORM\Column(name: 'cloudinary_url', type: Types::TEXT)]
+    #[Groups(['track:read'])]
     private ?string $cloudinaryUrl = null;
 
-    #[ORM\Column(name: "version_name", length: 100, nullable: true)]
-    #[Groups(['track:read', 'track:write'])]
+    #[ORM\Column(name: 'version_name', length: 100, nullable: true)]
+    #[Groups(['track:read'])]
     private ?string $versionName = null;
 
-    #[ORM\Column(name: "is_final", options: ["default" => false])]
+    #[ORM\Column(name: 'is_final', options: ['default' => false], nullable: true)]
     #[Groups(['track:read'])]
     private ?bool $isFinal = false;
 
-    #[ORM\Column(length: 20, options: ["default" => "pendiente"])]
+    #[ORM\Column(name: 'status', length: 20, options: ['default' => 'pendiente'], nullable: true)]
     #[Groups(['track:read'])]
     private ?string $status = 'pendiente';
 
-    #[ORM\Column(name: "file_size_mb", type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[ORM\Column(name: 'file_size_mb', type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Groups(['track:read'])]
     private ?string $fileSizeMb = null;
 
-    #[ORM\Column(name: "created_at", type: Types::DATETIME_MUTABLE, options: ["default" => "CURRENT_TIMESTAMP"])]
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true, options: ['default' => 'CURRENT_TIMESTAMP'])]
     #[Groups(['track:read'])]
     private ?\DateTimeInterface $createdAt = null;
 
     public function __construct()
     {
         $this->createdAt = new \DateTime();
+        $this->isFinal = false;
+        $this->status = 'pendiente';
     }
 
     public function getId(): ?int
