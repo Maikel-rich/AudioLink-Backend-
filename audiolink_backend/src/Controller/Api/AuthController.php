@@ -25,28 +25,33 @@ class AuthController extends AbstractController
             return new JsonResponse(['error' => 'Email y password son obligatorios'], 400);
         }
 
+        $existingUser = $entityManager->getRepository(User::class)->findOneBy(['email' => strtolower(trim($data['email']))]);
+        if ($existingUser) {
+            return new JsonResponse(['error' => 'El correo electrónico ya se encuentra registrado en el sistema'], 400);
+        }
+
         $user = new User();
-        $user->setEmail($data['email']);
+        $user->setEmail(strtolower(trim($data['email'])));
         $user->setFullName($data['fullName'] ?? null);
 
-        // 0: Productor, 1: Artista, 2: Admin
         $roleValue = isset($data['role']) ? (int)$data['role'] : User::ROLE_ARTIST;
         $user->setRole($roleValue);
 
         $hashedPassword = $passwordHasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
-        if (isset($data['genres'])) $user->setGenres($data['genres']);
-        if (isset($data['languages'])) $user->setLanguages($data['languages']);
+        $user->setGenres($data['genres'] ?? []);
+        $user->setLanguages($data['languages'] ?? []);
+        $user->setIsVerified(false);
+        $user->setCreatedAt(new \DateTime());
 
         try {
             $entityManager->persist($user);
             $entityManager->flush();
         } catch (\Exception $e) {
             return new JsonResponse([
-                'error' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
+                'error' => 'Error crítico al escribir en la base de datos central.',
+                'details' => $e->getMessage()
             ], 500);
         }
 
@@ -60,17 +65,28 @@ class AuthController extends AbstractController
         ], 201);
     }
 
+    #[Route('/me', name: 'api_auth_me', methods: ['GET'])]
+    public function me(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'No estás autenticado o token inválido'], 401);
+        }
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'fullName' => $user->getFullName(),
+            'role' => $user->getRole()
+        ], 200);
+    }
+
     #[Route('/login', name: 'api_auth_login', methods: ['POST'])]
     public function login(): JsonResponse
     {
         return new JsonResponse([
-            'error' => 'Error en el firewall.'
+            'error' => 'Error en el firewall central de Symfony.'
         ], 500);
-    }
-
-    #[Route('/me', name: 'api_auth_me', methods: ['GET'])]
-    public function me(): JsonResponse
-    {
-        return $this->json($this->getUser(), 200, [], ['groups' => 'user:read']);
     }
 }
